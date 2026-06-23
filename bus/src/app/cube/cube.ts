@@ -268,27 +268,10 @@ export class Cube implements AfterViewInit {
 
   restartGame() {
     this.health = 100;
-
     this.score = 0;
-
     this.speed = 0;
-
     this.gameOver = false;
-
-    this.bus.mesh.position.set(
-      0,
-
-      0,
-
-      0,
-    );
-
-    this.camera.position.set(
-      0,
-
-      8,
-
-      15,
-    );
+    this.bus.mesh.position.set(0, 0, 0);
+    this.camera.position.set(0, 8, 15);
   }
 }
