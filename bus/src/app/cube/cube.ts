@@ -1,89 +1,294 @@
-import { AfterViewInit, Component, ElementRef, ViewChild, viewChild } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, ViewChild, ChangeDetectorRef } from '@angular/core';
+
 import * as THREE from 'three';
+
+import { Road } from '../game/road';
+import { Bus } from '../game/bus';
+import { Traffic } from '../game/traffic';
+import { Environment } from '../game/enviroment';
+
+import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-cube',
-  imports: [],
+
+  imports: [CommonModule],
+
   templateUrl: './cube.html',
+
   styleUrl: './cube.css',
 })
 export class Cube implements AfterViewInit {
-  @ViewChild('canvasContainer')
-  container!: ElementRef;
+  constructor(private cd: ChangeDetectorRef) {}
 
-  ngAfterViewInit(): void {
+  @ViewChild('canvasContainer')
+  container!: ElementRef<HTMLDivElement>;
+
+  keys: any = {};
+
+  speed = 0;
+
+  score = 0;
+
+  health = 100;
+
+  gameOver = false;
+
+  collisionCooldown = false;
+
+  // store objects for restart
+
+  bus!: Bus;
+
+  camera!: THREE.PerspectiveCamera;
+
+  ngAfterViewInit() {
     const scene = new THREE.Scene();
 
     scene.background = new THREE.Color(0x87ceeb);
 
-    const camera = new THREE.PerspectiveCamera(
+    scene.fog = new THREE.Fog(0x87ceeb, 20, 300);
+
+    this.camera = new THREE.PerspectiveCamera(
       60,
-      window.innerWidth / window.innerHeight,
+
+      innerWidth / innerHeight,
+
       0.1,
+
       1000,
     );
 
-    camera.position.set(0, 5, 15);
+    this.camera.position.set(0, 8, 15);
 
-    camera.lookAt(0, 0, 0);
+    const renderer = new THREE.WebGLRenderer({
+      antialias: true,
+    });
 
-    const renderer = new THREE.WebGLRenderer();
+    renderer.setSize(
+      innerWidth,
 
-    renderer.setSize(window.innerWidth, window.innerHeight);
+      innerHeight,
+    );
+
+    if (!this.container) {
+      console.error('Canvas container missing');
+
+      return;
+    }
+
     this.container.nativeElement.appendChild(renderer.domElement);
-    const light = new THREE.DirectionalLight(0xffffff, 2);
-    light.position.set(5, 10, 5);
 
-    scene.add(light);
-    const roadGeometry = new THREE.PlaneGeometry(8, 100);
+    // LIGHT
 
-    const roadMaterial = new THREE.MeshStandardMaterial({ color: 0x333333 });
+    const sun = new THREE.DirectionalLight(0xffffff, 2);
 
-    const road = new THREE.Mesh(roadGeometry, roadMaterial);
+    sun.position.set(5, 10, 5);
 
-    road.rotation.x = -Math.PI / 2;
-    scene.add(road);
+    scene.add(sun);
 
-    const busGeometry = new THREE.BoxGeometry(2, 1, 4);
+    scene.add(new THREE.AmbientLight(0xffffff, 0.5));
 
-    const busMaterial = new THREE.MeshStandardMaterial({ color: 0xffffff });
+    // CREATE GAME OBJECTS
 
-    const bus = new THREE.Mesh(busGeometry, busMaterial);
+    this.bus = new Bus();
 
-    bus.position.y = 0.6;
-    bus.position.z = 0;
+    scene.add(this.bus.mesh);
 
-    scene.add(bus);
+    const road = new Road(scene);
 
-    const mountainGeometry = new THREE.ConeGeometry(4, 5, 4);
+    const traffic = new Traffic(scene);
 
-    const mountainMaterial = new THREE.MeshStandardMaterial({ color: 0x555555 });
-    const mountain = new THREE.Mesh(mountainGeometry, mountainMaterial);
-    mountain.position.set(-7, 2, -10);
+    const environment = new Environment(scene);
 
-    scene.add(mountain);
+    // CONTROLS
 
-    const mountain2 = mountain.clone();
-    mountain2.position.x = 7;
+    window.addEventListener(
+      'keydown',
 
-    scene.add(mountain2);
+      (e) => {
+        if (!this.gameOver) {
+          this.keys[e.key.toLowerCase()] = true;
+        }
+      },
+    );
 
-    for (let i = 0; i < 10; i++) {
-      const tree = new THREE.Mesh(
-        new THREE.ConeGeometry(0.5, 2, 8),
-        new THREE.MeshStandardMaterial({ color: 0x228b22 }),
-      );
-      tree.position.set(i % 2 === 0 ? -5 : 5, 1, -i * 5);
-      scene.add(tree);
-    }
-    function animate() {
+    window.addEventListener(
+      'keyup',
+
+      (e) => {
+        this.keys[e.key.toLowerCase()] = false;
+      },
+    );
+
+    // RESIZE
+
+    window.addEventListener(
+      'resize',
+
+      () => {
+        this.camera.aspect = innerWidth / innerHeight;
+
+        this.camera.updateProjectionMatrix();
+
+        renderer.setSize(innerWidth, innerHeight);
+      },
+    );
+
+    const animate = () => {
       requestAnimationFrame(animate);
-      bus.position.z += 0.05;
-      if (bus.position.z > 10) {
-        bus.position.z = -20;
+
+      // STOP GAME
+
+      if (this.gameOver) {
+        renderer.render(scene, this.camera);
+
+        return;
       }
-      renderer.render(scene, camera);
-    }
+
+      // =================
+      // SPEED SYSTEM
+      // =================
+
+      if (this.keys['w']) {
+        this.speed += 0.008;
+      } else {
+        this.speed *= 0.97;
+      }
+
+      if (this.keys['s']) {
+        this.speed -= 0.02;
+      }
+
+      this.speed = THREE.MathUtils.clamp(
+        this.speed,
+
+        0,
+
+        1,
+      );
+
+      // SCORE
+
+      if (this.speed > 0) {
+        this.score += this.speed * 0.1;
+      }
+
+      // =================
+      // STEERING
+      // =================
+
+      const steer = 0.08;
+
+      if (this.keys['a']) {
+        this.bus.mesh.position.x -= steer;
+      }
+
+      if (this.keys['d']) {
+        this.bus.mesh.position.x += steer;
+      }
+
+      // road limit
+
+      this.bus.mesh.position.x = THREE.MathUtils.clamp(
+        this.bus.mesh.position.x,
+
+        -3.5,
+
+        3.5,
+      );
+
+      // =================
+      // WORLD UPDATE
+      // =================
+
+      road.update(this.speed);
+
+      traffic.update(this.speed);
+
+      environment.update(this.speed);
+
+      this.bus.update(this.speed);
+
+      // =================
+      // COLLISION
+      // =================
+
+      traffic.cars.forEach((car) => {
+        const distance = this.bus.mesh.position.distanceTo(car.position);
+
+        if (distance < 2 && !this.collisionCooldown) {
+          this.health -= 10;
+
+          this.speed = 0;
+
+          this.collisionCooldown = true;
+
+          setTimeout(() => {
+            this.collisionCooldown = false;
+          }, 1000);
+
+          if (this.health <= 0) {
+            this.health = 0;
+
+            this.gameOver = true;
+          }
+        }
+      });
+
+      // =================
+      // CAMERA
+      // =================
+
+      this.camera.position.lerp(
+        new THREE.Vector3(
+          this.bus.mesh.position.x,
+
+          6,
+
+          this.bus.mesh.position.z + 14,
+        ),
+
+        0.08,
+      );
+
+      this.camera.lookAt(this.bus.mesh.position);
+
+      this.cd.detectChanges();
+
+      renderer.render(
+        scene,
+
+        this.camera,
+      );
+    };
+
     animate();
+  }
+
+  restartGame() {
+    this.health = 100;
+
+    this.score = 0;
+
+    this.speed = 0;
+
+    this.gameOver = false;
+
+    this.bus.mesh.position.set(
+      0,
+
+      0,
+
+      0,
+    );
+
+    this.camera.position.set(
+      0,
+
+      8,
+
+      15,
+    );
   }
 }

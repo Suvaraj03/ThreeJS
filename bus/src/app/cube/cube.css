@@ -1,0 +1,29 @@
+.gameOver {
+  position: fixed;
+
+  top: 50%;
+
+  left: 50%;
+
+  transform: translate(-50%, -50%);
+
+  background: rgba(0, 0, 0, 0.8);
+
+  color: white;
+
+  padding: 40px;
+
+  border-radius: 20px;
+
+  text-align: center;
+
+  z-index: 20;
+}
+
+.gameOver button {
+  font-size: 22px;
+
+  padding: 10px 30px;
+
+  cursor: pointer;
+}

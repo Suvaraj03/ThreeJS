@@ -1,1 +1,24 @@
-<div #canvasContainer></div>
+<div #canvasContainer class="hud">
+  <div class="title">🚌 Bus Simulator</div>
+
+  <p>
+    Speed:
+    {{ speed | number: '1.0-0' }}
+  </p>
+
+  <p>
+    Score:
+    {{ score | number: '1.0-0' }}
+  </p>
+
+  <p>
+    Health:
+    {{ health }}
+  </p>
+</div>
+
+<div class="gameOver" *ngIf="gameOver">
+  <h1>💥 GAME OVER</h1>
+
+  <button (click)="restartGame()">Restart</button>
+</div>
