@@ -1,24 +1,27 @@
-<div #canvasContainer class="hud">
-  <div class="title">🚌 Bus Simulator</div>
+<div #canvasContainer class="game"></div>
 
-  <p>
-    Speed:
-    {{ speed | number: '1.0-0' }}
-  </p>
+<div class="hud">
+  <h2>🚌 Bus Simulator</h2>
 
-  <p>
-    Score:
-    {{ score | number: '1.0-0' }}
-  </p>
+  <p>Speed: {{ speed | number: '1.0-0' }}</p>
 
-  <p>
-    Health:
-    {{ health }}
-  </p>
+  <p>Score: {{ score | number: '1.0-0' }}</p>
+
+  <p>Health: {{ health }}</p>
+</div>
+
+<!-- MOBILE CONTROLLER -->
+
+<div class="controls">
+  <button (touchstart)="moveLeft()" (touchend)="stopMove()">⬅️</button>
+
+  <button (touchstart)="moveForward()" (touchend)="stopMove()">⬆️</button>
+
+  <button (touchstart)="moveRight()" (touchend)="stopMove()">➡️</button>
 </div>
 
 <div class="gameOver" *ngIf="gameOver">
-  <h1>💥 GAME OVER</h1>
+  <h1>GAME OVER</h1>
 
   <button (click)="restartGame()">Restart</button>
 </div>

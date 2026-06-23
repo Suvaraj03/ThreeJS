@@ -70,6 +70,7 @@ export class Cube implements AfterViewInit {
 
       innerHeight,
     );
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
     if (!this.container) {
       console.error('Canvas container missing');
@@ -273,5 +274,24 @@ export class Cube implements AfterViewInit {
     this.gameOver = false;
     this.bus.mesh.position.set(0, 0, 0);
     this.camera.position.set(0, 8, 15);
+  }
+  moveLeft() {
+    this.keys['a'] = true;
+  }
+
+  moveRight() {
+    this.keys['d'] = true;
+  }
+
+  moveForward() {
+    this.keys['w'] = true;
+  }
+
+  stopMove() {
+    this.keys['a'] = false;
+
+    this.keys['d'] = false;
+
+    this.keys['w'] = false;
   }
 }

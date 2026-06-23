@@ -1,29 +1,65 @@
-.gameOver {
+.game {
   position: fixed;
 
-  top: 50%;
+  width: 100vw;
 
-  left: 50%;
+  height: 100vh;
 
-  transform: translate(-50%, -50%);
+  overflow: hidden;
+}
 
-  background: rgba(0, 0, 0, 0.8);
+.hud {
+  position: fixed;
+
+  top: 20px;
+
+  left: 20px;
+
+  z-index: 10;
+
+  background: rgba(0, 0, 0, 0.5);
 
   color: white;
 
-  padding: 40px;
+  padding: 15px;
 
-  border-radius: 20px;
+  border-radius: 15px;
+}
 
-  text-align: center;
+.controls {
+  position: fixed;
+
+  bottom: 40px;
+
+  left: 50%;
+
+  transform: translateX(-50%);
+
+  display: flex;
+
+  gap: 20px;
 
   z-index: 20;
 }
 
-.gameOver button {
-  font-size: 22px;
+.controls button {
+  width: 70px;
 
-  padding: 10px 30px;
+  height: 70px;
 
-  cursor: pointer;
+  font-size: 30px;
+
+  border-radius: 50%;
+
+  border: none;
+
+  background: rgba(255, 255, 255, 0.7);
+}
+
+@media (max-width: 600px) {
+  .controls button {
+    width: 60px;
+
+    height: 60px;
+  }
 }
